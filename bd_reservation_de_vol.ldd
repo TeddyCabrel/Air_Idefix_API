@@ -1,0 +1,111 @@
+CREATE DATABASE service_reservation;
+USE service_reservation;
+
+/*CREATION TABLE CLIENTS */
+CREATE TABLE clients(
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    nom VARCHAR(255) NOT NULL,
+    prénom VARCHAR(255) NOT NULL,
+    numéro_passeport VARCHAR(255) NOT NULL,
+    addresse VARCHAR(255) NOT NULL,
+    email VARCHAR(255),
+    numéro_téléphone VARCHAR(255)
+);
+
+/*CREATION TABLE VILLES*/
+CREATE TABLE villes(
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    nom VARCHAR(255) NOT NULL,
+    pays CHAR(4) NOT NULL,
+    url_photo VARCHAR(255)
+);
+
+/*CREATION TABLE AEROPORTS*/
+CREATE TABLE aéroports(
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    code CHAR(4) UNIQUE NOT NULL,
+    nom VARCHAR(255) NOT NULL,
+    ville_id INT NOT NULL,
+    addresse VARCHAR(255) not null,
+    FOREIGN KEY (ville_id ) REFERENCES villes(id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+/* CREATION TABLE AVIONS */
+CREATE TABLE avions (
+    id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+    type VARCHAR(255) NOT NULL
+);
+
+/* CREATION TABLE SIÈGES */
+CREATE TABLE sièges (
+    id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+    numéro_siège VARCHAR(255) NOT NULL,
+    classe ENUM('économique', 'affaire', 'première') NOT NULL
+);
+
+/*CRÉATION TABLE TRAJET*/
+CREATE TABLE trajets (
+    id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+    numéro_trajet VARCHAR(255) UNIQUE NOT NULL,
+    id_aéroport_debut INT NOT NULL,
+    id_aéroport_fin INT NOT NULL,
+    FOREIGN KEY (id_aéroport_debut) REFERENCES aéroports(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (id_aéroport_fin) REFERENCES aéroports(id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+/*CREATIONS TABLE VOLS*/
+CREATE TABLE vols (
+    id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+    date_départ DATETIME NOT NULL,
+    date_arrivée DATETIME NOT NULL,
+    avion_id INT NOT NULL,
+    trajet_id INT NOT NULL,
+    poids_max_bag INT NOT NULL,
+    durée INT NOT NULL,
+    FOREIGN KEY (trajet_id) REFERENCES trajets(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (avion_id) REFERENCES avions(id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+/* CREATION TABLE VOLS_SIÈGES */
+CREATE TABLE vols_sièges (
+    vol_id INT NOT NULL,
+    siège_id INT NOT NULL,
+    statut_siege ENUM('occupé', 'disponible') NOT NULL,
+    PRIMARY KEY (vol_id, siège_id),
+    FOREIGN KEY (vol_id) REFERENCES vols(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (siège_id) REFERENCES sièges(id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+/*CREATIONS VOL STATUT */
+CREATE TABLE vol_statut (
+    id_vol INT NOT NULL,
+    statut ENUM('depart', 'en attente', 'en route', 'arrivé') NOT NULL,
+    heure TIMESTAMP NOT NULL,
+    PRIMARY KEY (id_vol,heure),
+    FOREIGN KEY (id_vol) REFERENCES vols(id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+/*CREATIONS PRIX PAR CLASSE*/
+CREATE TABLE prix_par_classe (
+    id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    prix_économique DOUBLE NOT NULL,
+    prix_affaire DOUBLE NOT NULL,
+    prix_première DOUBLE NOT NULL,
+    id_vol INT NOT NULL,
+    FOREIGN KEY (id_vol) REFERENCES vols(id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+/* CREATION TABLE RÉSERVATIONS MODIF ajoute de id_clients et id_siège*/
+/*siège_selectionné VARCHAR(255), no need for this anymore*/
+CREATE TABLE réservations (
+    id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    numéro_réservation VARCHAR(255) NOT NULL UNIQUE,
+    id_vol INT NOT NULL,
+    id_client INT NOT NULL,
+    id_sièges INT NOT NULL,
+    classe SET('économique', 'affaire', 'première') NOT NULL,
+    bagages INT,
+    FOREIGN KEY (id_vol) REFERENCES vols(id) ON DELETE CASCADE ON UPDATE CASCADE,
+	FOREIGN KEY (id_client) REFERENCES clients(id) ON DELETE CASCADE ON UPDATE CASCADE,
+	FOREIGN KEY (id_sièges) REFERENCES sièges(id) ON DELETE CASCADE ON UPDATE CASCADE
+);
